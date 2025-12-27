@@ -1,0 +1,24 @@
+[package]
+name = "tabstash-native"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "tabstash-native"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+zstd = "0.12"
+sled = "0.34"
+uuid = { version = "1", features = ["v4", "serde"] }
+anyhow = "1"
+bytes = "1"
+bincode = "1"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3"
+
