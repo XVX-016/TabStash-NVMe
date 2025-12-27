@@ -1,0 +1,19 @@
+﻿{
+  "manifest_version": 3,
+  "name": "TabStash NVMe",
+  "version": "0.1.0",
+  "description": "Offload inactive tab memory onto NVMe for speed and reduced RAM usage.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "scripting",
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "src/background/index.js"
+  },
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_icon": "/assets/icon.png"
+  }
+}
