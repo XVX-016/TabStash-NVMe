@@ -8,10 +8,19 @@ use sled::Db;
 use tokio::fs;
 use anyhow::Result;
 
+/// Get the platform-appropriate snapshots directory
+fn get_snapshots_directory() -> Result<PathBuf> {
+    let base_dir = dirs::data_local_dir()
+        .ok_or_else(|| anyhow::anyhow!("Could not determine data directory"))?;
+    
+    Ok(base_dir.join("TabStash").join("snapshots"))
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize shared state once
-    let snapshots_dir = PathBuf::from("./snapshots");
+    // Use platform-appropriate data directory
+    let snapshots_dir = get_snapshots_directory()?;
     
     // Create snapshots directory if missing
     if let Err(e) = fs::create_dir_all(&snapshots_dir).await {

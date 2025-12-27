@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "TabStash NVMe",
   "version": "0.1.0",
-  "description": "Offload inactive tab memory onto NVMe for speed and reduced RAM usage.",
+  "description": "Offload inactive tab memory onto NVMe SSD for reduced RAM usage and faster browser performance. Requires native host installation.",
+  "minimum_chrome_version": "88",
   "permissions": [
     "tabs",
     "storage",
@@ -14,6 +15,17 @@
   },
   "action": {
     "default_popup": "src/popup/index.html",
-    "default_icon": "/assets/icon.png"
+    "default_icon": {
+      "16": "/assets/icon16.png",
+      "32": "/assets/icon32.png",
+      "48": "/assets/icon48.png",
+      "128": "/assets/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "/assets/icon16.png",
+    "32": "/assets/icon32.png",
+    "48": "/assets/icon48.png",
+    "128": "/assets/icon128.png"
   }
 }

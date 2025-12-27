@@ -1,0 +1,63 @@
+# Build artifacts
+target/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Extension packaging
+extension-package-temp/
+*.zip
+tabstash-nvme-*.zip
+
+# Node modules
+node_modules/
+package-lock.json
+yarn.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Rust
+Cargo.lock
+**/*.rs.bk
+
+# Logs
+*.log
+logs/
+
+# Snapshots (user data)
+snapshots/
+*.bin.zst
+
+# Test artifacts
+test-output/
+coverage/
+
+# Installers (built)
+installers/
+*.msi
+*.exe
+tabstash-installer-*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Environment
+.env
+.env.local
+
+# Native messaging manifests (user-specific)
+native-host/config/tabstash-native.json
+
