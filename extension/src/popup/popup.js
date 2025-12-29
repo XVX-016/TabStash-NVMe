@@ -129,17 +129,17 @@ function updateStatusItem(itemId, success, label, action) {
   if (success === null || success === undefined) {
     // Checking state
     item.classList.add('checking');
-    icon.textContent = '⏳';
+    icon.textContent = '...';
     actionEl.textContent = '';
   } else if (success) {
     // Success state
     item.classList.add('success');
-    icon.textContent = '✅';
+    icon.textContent = 'OK';
     actionEl.textContent = '';
   } else {
     // Error state
     item.classList.add('error');
-    icon.textContent = '❌';
+    icon.textContent = 'FAIL';
     if (action) {
       if (action.action === 'install') {
         actionEl.innerHTML = `<a href="#" class="status-action-button" onclick="window.open('https://github.com/your-repo/releases', '_blank')">${action.text}</a>`;

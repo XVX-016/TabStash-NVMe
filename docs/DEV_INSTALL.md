@@ -100,7 +100,7 @@ The native host manifest must list your specific extension ID to allow connectio
 
 6. **Verify**
    - Installation Status panel shows all checks
-   - Each item must show ✅ for full functionality
+   - Each item must show OK for full functionality
 
 ## Troubleshooting
 
@@ -202,7 +202,7 @@ When native host binary is updated:
 *Screenshot: chrome://extensions showing extension ID under extension name*
 
 ### Installation Status Panel
-*Screenshot: Extension popup showing Installation Status checklist with all ✅*
+*Screenshot: Extension popup showing Installation Status checklist with all OK*
 
 ## FAQ
 

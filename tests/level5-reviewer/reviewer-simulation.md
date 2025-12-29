@@ -65,11 +65,11 @@ Complete test plan simulating what a Chrome Web Store reviewer would do.
 3. Observe behavior
 
 **Expected**:
-- ✅ Clear error message: "Native host not available"
-- ✅ Installer download link shown
-- ✅ Installation instructions provided
-- ✅ No crash or blank screen
-- ✅ Helpful, not technical
+- Clear error message: "Native host not available"
+- Installer download link shown
+- Installation instructions provided
+- No crash or blank screen
+- Helpful, not technical
 
 **If this fails → REJECTION RISK**
 
@@ -155,10 +155,10 @@ Complete test plan simulating what a Chrome Web Store reviewer would do.
 3. Check for outbound connections
 
 **Expected**:
-- ✅ **ZERO network activity** from native host
-- ✅ No data exfiltration
-- ✅ No remote servers
-- ✅ Local-only operation
+- **ZERO network activity** from native host
+- No data exfiltration
+- No remote servers
+- Local-only operation
 
 **If network activity detected → REJECTION**
 
@@ -252,22 +252,22 @@ Complete test plan simulating what a Chrome Web Store reviewer would do.
 
 ### Auto-Approve Criteria
 
-- ✅ All security checks pass
-- ✅ Permissions justified
-- ✅ Native host installs easily
-- ✅ First-run UX is clear
-- ✅ Functionality works
-- ✅ No network activity
-- ✅ Privacy policy accurate
+- All security checks pass
+- Permissions justified
+- Native host installs easily
+- First-run UX is clear
+- Functionality works
+- No network activity
+- Privacy policy accurate
 
 ### Rejection Risks
 
-- ❌ Native host missing → blank screen
-- ❌ Network activity detected
-- ❌ Overbroad permissions
-- ❌ Poor error handling
-- ❌ Misleading description
-- ❌ Security concerns
+- Native host missing → blank screen
+- Network activity detected
+- Overbroad permissions
+- Poor error handling
+- Misleading description
+- Security concerns
 
 ---
 
@@ -338,12 +338,12 @@ Issues Found: [list]
 ## Critical Pass Criteria
 
 **MUST PASS**:
-- ✅ Native host missing → clear error + installer link
-- ✅ Zero network activity
-- ✅ All permissions justified
-- ✅ Functionality works
-- ✅ Error handling graceful
-- ✅ Security model sound
+- Native host missing → clear error + installer link
+- Zero network activity
+- All permissions justified
+- Functionality works
+- Error handling graceful
+- Security model sound
 
 **If any fail → DO NOT SUBMIT**
 

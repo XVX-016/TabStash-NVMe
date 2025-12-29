@@ -254,11 +254,11 @@ Overall: [PASS/FAIL]
 ## Critical Pass/Fail Criteria
 
 **MUST PASS ALL**:
-- ✅ RAM decreases after offload
-- ✅ Restore is fast (< 500ms)
-- ✅ Zero network activity
-- ✅ Data integrity maintained
-- ✅ System remains stable
+- RAM decreases after offload
+- Restore is fast (< 500ms)
+- Zero network activity
+- Data integrity maintained
+- System remains stable
 
 **If any fail → DO NOT PUBLISH**
 

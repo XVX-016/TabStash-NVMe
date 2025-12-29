@@ -102,7 +102,7 @@ Write-Host "3. Restart Chrome completely (close all windows)" -ForegroundColor W
 Write-Host ""
 Write-Host "4. Verify installation:" -ForegroundColor White
 Write-Host "   - Open extension popup" -ForegroundColor Gray
-Write-Host "   - Check 'Installation Status' panel - all items should show ✅" -ForegroundColor Gray
+Write-Host "   - Check 'Installation Status' panel - all items should show OK" -ForegroundColor Gray
 Write-Host ""
 Write-Host "If you need to uninstall, run: .\uninstall-windows.ps1" -ForegroundColor Cyan
 Write-Host ""
