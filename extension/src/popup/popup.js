@@ -16,23 +16,60 @@ function getPlatform() {
 }
 
 // Update status indicator
-function updateStatus(status, message) {
+function updateStatus(status, message, errorDetails = null) {
   const indicator = document.getElementById('statusIndicator');
   const statusText = document.getElementById('statusText');
   const installSection = document.getElementById('installSection');
   const infoSection = document.getElementById('infoSection');
+  const errorSection = document.getElementById('errorSection');
   
   // Remove all status classes
-  indicator.classList.remove('connected', 'disconnected', 'checking');
+  indicator.classList.remove('connected', 'disconnected', 'checking', 'id_mismatch');
   
   // Add appropriate class
   indicator.classList.add(status);
   statusText.textContent = message;
   
-  // Show/hide install section
-  if (status === 'disconnected') {
+  // Hide all sections first
+  installSection.classList.remove('show');
+  infoSection.classList.add('hidden');
+  errorSection.classList.remove('show');
+  
+  // Show appropriate section based on status
+  if (status === 'id_mismatch' || (errorDetails && errorDetails.error)) {
+    // Show error section
+    errorSection.classList.add('show');
+    const errorTitle = document.getElementById('errorTitle');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorDetailsEl = document.getElementById('errorDetails');
+    const errorActions = document.getElementById('errorActions');
+    
+    if (status === 'id_mismatch') {
+      errorTitle.textContent = 'Extension ID Mismatch Detected';
+      errorMessage.textContent = 'Your extension ID does not match the native host configuration.';
+      
+      let detailsHtml = `<strong>Your Extension ID:</strong><br>${errorDetails.extensionId || 'Unknown'}<br><br>`;
+      if (errorDetails.expectedIds && errorDetails.expectedIds.length > 0) {
+        detailsHtml += `<strong>Native Host Expects:</strong><br>${errorDetails.expectedIds.join(', ')}`;
+      }
+      errorDetailsEl.innerHTML = detailsHtml;
+      
+      // Show fix command
+      const platform = getPlatform();
+      const scriptName = platform === 'windows' ? 'link-extension.ps1' : 'link-extension.sh';
+      const command = `scripts/${scriptName} "${errorDetails.extensionId || ''}"`;
+      errorActions.innerHTML = `
+        <div class="error-command">${command}</div>
+        <p style="font-size: 11px; color: #666; margin-top: 4px;">Run this command to link your extension ID to the native host.</p>
+      `;
+    } else {
+      errorTitle.textContent = 'Connection Error';
+      errorMessage.textContent = errorDetails.error || 'Unknown error occurred';
+      errorDetailsEl.textContent = '';
+      errorActions.innerHTML = '';
+    }
+  } else if (status === 'disconnected') {
     installSection.classList.add('show');
-    infoSection.classList.add('hidden');
     
     // Update installer links based on platform
     const platform = getPlatform();
@@ -54,12 +91,9 @@ function updateStatus(status, message) {
     windowsLink.href = INSTALLER_LINKS.windows;
     linuxLink.href = INSTALLER_LINKS.linux;
     helpLink.href = INSTALLER_LINKS.help;
-  } else {
-    installSection.classList.remove('show');
-    if (status === 'connected') {
-      infoSection.classList.remove('hidden');
-      document.getElementById('infoStatus').textContent = 'Connected';
-    }
+  } else if (status === 'connected') {
+    infoSection.classList.remove('hidden');
+    document.getElementById('infoStatus').textContent = 'Connected';
   }
 }
 
@@ -73,12 +107,18 @@ async function performHealthCheck() {
     
     if (response && response.available) {
       updateStatus('connected', 'Native host connected');
+    } else if (response && response.status === 'id_mismatch') {
+      updateStatus('id_mismatch', 'Extension ID mismatch', {
+        error: response.error,
+        extensionId: response.extensionId,
+        expectedIds: response.expectedIds
+      });
     } else {
-      updateStatus('disconnected', 'Native host not available');
+      updateStatus('disconnected', response?.error || 'Native host not available', response);
     }
   } catch (error) {
     console.error('Health check failed:', error);
-    updateStatus('disconnected', 'Connection failed');
+    updateStatus('disconnected', 'Connection failed', { error: error.message });
   }
 }
 
