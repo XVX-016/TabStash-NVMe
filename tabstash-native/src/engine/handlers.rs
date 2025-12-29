@@ -5,6 +5,8 @@ use crate::compression;
 use serde_json::json;
 use uuid::Uuid;
 use anyhow::Result;
+use std::path::PathBuf;
+use tokio::fs;
 
 pub async fn handle_health_check(request_id: String) -> Response {
     Response {
@@ -13,6 +15,90 @@ pub async fn handle_health_check(request_id: String) -> Response {
         data: Some(json!({"alive": true})),
         error: None,
     }
+}
+
+/// Get the platform-appropriate Chrome Native Messaging manifest path
+fn get_manifest_path() -> Result<PathBuf> {
+    #[cfg(target_os = "windows")]
+    {
+        let local_app_data = std::env::var("LOCALAPPDATA")
+            .map_err(|_| anyhow::anyhow!("LOCALAPPDATA environment variable not set"))?;
+        Ok(PathBuf::from(local_app_data)
+            .join("Google")
+            .join("Chrome")
+            .join("User Data")
+            .join("NativeMessagingHosts")
+            .join("tabstash_native.json"))
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        let home = std::env::var("HOME")
+            .map_err(|_| anyhow::anyhow!("HOME environment variable not set"))?;
+        Ok(PathBuf::from(home)
+            .join(".config")
+            .join("google-chrome")
+            .join("NativeMessagingHosts")
+            .join("tabstash_native.json"))
+    }
+    
+    #[cfg(not(any(target_os = "windows", target_os = "linux")))]
+    {
+        Err(anyhow::anyhow!("Unsupported platform"))
+    }
+}
+
+pub async fn handle_get_manifest_info(request_id: String) -> Response {
+    match get_manifest_info_internal().await {
+        Ok(info) => Response {
+            id: request_id,
+            status: "OK".to_string(),
+            data: Some(info),
+            error: None,
+        },
+        Err(e) => Response {
+            id: request_id,
+            status: "ERROR".to_string(),
+            data: None,
+            error: Some(format!("Failed to read manifest: {}", e)),
+        },
+    }
+}
+
+async fn get_manifest_info_internal() -> Result<serde_json::Value> {
+    let manifest_path = get_manifest_path()?;
+    
+    // Read manifest file
+    let content = fs::read_to_string(&manifest_path).await
+        .map_err(|e| anyhow::anyhow!("Failed to read manifest at {}: {}", manifest_path.display(), e))?;
+    
+    let manifest: Value = serde_json::from_str(&content)
+        .map_err(|e| anyhow::anyhow!("Failed to parse manifest JSON: {}", e))?;
+    
+    // Extract allowed_origins
+    let allowed_origins = manifest.get("allowed_origins")
+        .and_then(|v| v.as_array())
+        .ok_or_else(|| anyhow::anyhow!("Manifest missing or invalid allowed_origins"))?
+        .iter()
+        .filter_map(|v| v.as_str())
+        .map(|s| {
+            // Extract extension ID from chrome-extension://ID/ format
+            s.strip_prefix("chrome-extension://")
+                .and_then(|s| s.strip_suffix("/"))
+                .unwrap_or(s)
+                .to_string()
+        })
+        .collect::<Vec<String>>();
+    
+    // Get version from Cargo.toml at compile time
+    let native_version = env!("CARGO_PKG_VERSION");
+    let protocol_version = 1u32; // Current protocol version
+    
+    Ok(json!({
+        "allowedOrigins": allowed_origins,
+        "nativeVersion": native_version,
+        "protocolVersion": protocol_version
+    }))
 }
 
 pub async fn handle_store_tab(

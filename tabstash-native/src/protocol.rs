@@ -24,6 +24,7 @@ pub enum Action {
     DeleteTab,
     ListTabs,
     HealthCheck,
+    GetManifestInfo,
 }
 
 // Strong payload types for internal use

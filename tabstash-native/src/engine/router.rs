@@ -8,6 +8,9 @@ pub async fn handle(req: Request, ctx: &EngineContext) -> Response {
         Action::HealthCheck => {
             handlers::handle_health_check(req.id).await
         }
+        Action::GetManifestInfo => {
+            handlers::handle_get_manifest_info(req.id).await
+        }
         Action::StoreTab => {
             match deserialize_payload::<StoreTabPayload>(&req.payload) {
                 Ok(payload) => handlers::handle_store_tab(req.id, ctx, payload).await,

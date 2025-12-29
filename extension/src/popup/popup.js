@@ -93,8 +93,44 @@ async function getConnectionState() {
   }
 }
 
+// Load and display extension ID
+async function loadExtensionId() {
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'getExtensionId' });
+    if (response && response.extensionId) {
+      const extensionIdElement = document.getElementById('extensionId');
+      extensionIdElement.textContent = response.extensionId;
+      
+      // Setup copy button
+      const copyButton = document.getElementById('copyExtensionId');
+      copyButton.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(response.extensionId);
+          copyButton.textContent = 'Copied!';
+          setTimeout(() => {
+            copyButton.textContent = 'Copy';
+          }, 2000);
+        } catch (error) {
+          console.error('Failed to copy extension ID:', error);
+          // Fallback: select text
+          const range = document.createRange();
+          range.selectNode(extensionIdElement);
+          window.getSelection().removeAllRanges();
+          window.getSelection().addRange(range);
+          copyButton.textContent = 'Select & Copy';
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Failed to load extension ID:', error);
+  }
+}
+
 // Initialize popup
 async function init() {
+  // Load extension ID first
+  await loadExtensionId();
+  
   // Perform health check on open
   await performHealthCheck();
   
