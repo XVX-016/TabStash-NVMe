@@ -9,10 +9,18 @@ use std::path::PathBuf;
 use tokio::fs;
 
 pub async fn handle_health_check(request_id: String) -> Response {
+    // Get version from Cargo.toml at compile time
+    let native_version = env!("CARGO_PKG_VERSION");
+    let protocol_version = 1u32; // Current protocol version
+    
     Response {
         id: request_id,
         status: "OK".to_string(),
-        data: Some(json!({"alive": true})),
+        data: Some(json!({
+            "alive": true,
+            "nativeVersion": native_version,
+            "protocolVersion": protocol_version
+        })),
         error: None,
     }
 }

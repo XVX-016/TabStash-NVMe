@@ -3,7 +3,7 @@
 # Usage: Run as Administrator: .\install-windows.ps1
 
 param(
-    [string]$ExtensionId = "EXTENSION_ID_PLACEHOLDER",
+    [string]$ExtensionId = "",
     [string]$BinaryPath = "$env:ProgramFiles\TabStash\tabstash-native.exe"
 )
 
@@ -63,14 +63,22 @@ if (-not (Test-Path $manifestDir)) {
 
 # Create manifest
 $manifestPath = Join-Path $manifestDir "tabstash_native.json"
+
+# If extension ID provided, use it; otherwise use placeholder
+if ($ExtensionId -and $ExtensionId -ne "" -and $ExtensionId -ne "EXTENSION_ID_PLACEHOLDER") {
+    $allowedOrigins = @("chrome-extension://$ExtensionId/")
+    Write-Host "Installing manifest with extension ID: $ExtensionId" -ForegroundColor Cyan
+} else {
+    $allowedOrigins = @("chrome-extension://EXTENSION_ID_PLACEHOLDER/")
+    Write-Host "Installing manifest with placeholder. Link extension ID later using link-extension.ps1" -ForegroundColor Yellow
+}
+
 $manifestContent = @{
     name = "tabstash_native"
     description = "Native messaging helper for TabStash NVMe"
     path = $BinaryPath
     type = "stdio"
-    allowed_origins = @(
-        "chrome-extension://$ExtensionId/"
-    )
+    allowed_origins = $allowedOrigins
 } | ConvertTo-Json
 
 Write-Host "Installing manifest to: $manifestPath" -ForegroundColor Cyan
@@ -80,8 +88,23 @@ Write-Host ""
 Write-Host "Installation complete!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Yellow
-Write-Host "1. Install the TabStash NVMe extension from Chrome Web Store" -ForegroundColor White
-Write-Host "2. Open the extension popup to verify connection" -ForegroundColor White
+Write-Host "1. Load the extension in Developer Mode:" -ForegroundColor White
+Write-Host "   - Open Chrome: chrome://extensions" -ForegroundColor Gray
+Write-Host "   - Enable 'Developer mode' (top-right toggle)" -ForegroundColor Gray
+Write-Host "   - Click 'Load unpacked'" -ForegroundColor Gray
+Write-Host "   - Select the 'extension' directory from this repository" -ForegroundColor Gray
+Write-Host ""
+Write-Host "2. Link your Extension ID:" -ForegroundColor White
+Write-Host "   - Copy your Extension ID from chrome://extensions or extension popup" -ForegroundColor Gray
+Write-Host "   - Run: .\scripts\link-extension.ps1 `"your-extension-id`"" -ForegroundColor Gray
+Write-Host ""
+Write-Host "3. Restart Chrome completely (close all windows)" -ForegroundColor White
+Write-Host ""
+Write-Host "4. Verify installation:" -ForegroundColor White
+Write-Host "   - Open extension popup" -ForegroundColor Gray
+Write-Host "   - Check 'Installation Status' panel - all items should show ✅" -ForegroundColor Gray
 Write-Host ""
 Write-Host "If you need to uninstall, run: .\uninstall-windows.ps1" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Note: Extension ID parameter is optional. You can link it later using link-extension.ps1" -ForegroundColor Gray
 

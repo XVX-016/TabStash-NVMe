@@ -5,7 +5,7 @@
 
 set -e
 
-EXTENSION_ID="${1:-EXTENSION_ID_PLACEHOLDER}"
+EXTENSION_ID="${1:-}"
 BINARY_NAME="tabstash-native"
 INSTALL_DIR="/usr/local/bin"
 DATA_DIR="$HOME/.local/share/tabstash/snapshots"
@@ -59,6 +59,16 @@ fi
 
 # Create manifest
 MANIFEST_PATH="$MANIFEST_DIR/tabstash_native.json"
+
+# If extension ID provided, use it; otherwise use placeholder
+if [ -n "$EXTENSION_ID" ] && [ "$EXTENSION_ID" != "EXTENSION_ID_PLACEHOLDER" ]; then
+    ALLOWED_ORIGINS="\"chrome-extension://$EXTENSION_ID/\""
+    echo "Installing manifest with extension ID: $EXTENSION_ID"
+else
+    ALLOWED_ORIGINS="\"chrome-extension://EXTENSION_ID_PLACEHOLDER/\""
+    echo "Installing manifest with placeholder. Link extension ID later using link-extension.sh"
+fi
+
 MANIFEST_CONTENT=$(cat <<EOF
 {
   "name": "tabstash_native",
@@ -66,7 +76,7 @@ MANIFEST_CONTENT=$(cat <<EOF
   "path": "$INSTALL_DIR/$BINARY_NAME",
   "type": "stdio",
   "allowed_origins": [
-    "chrome-extension://$EXTENSION_ID/"
+    $ALLOWED_ORIGINS
   ]
 }
 EOF
@@ -85,8 +95,23 @@ echo ""
 echo "Installation complete!"
 echo ""
 echo "Next steps:"
-echo "1. Install the TabStash NVMe extension from Chrome Web Store"
-echo "2. Open the extension popup to verify connection"
+echo "1. Load the extension in Developer Mode:"
+echo "   - Open Chrome: chrome://extensions"
+echo "   - Enable 'Developer mode' (top-right toggle)"
+echo "   - Click 'Load unpacked'"
+echo "   - Select the 'extension' directory from this repository"
+echo ""
+echo "2. Link your Extension ID:"
+echo "   - Copy your Extension ID from chrome://extensions or extension popup"
+echo "   - Run: ./scripts/link-extension.sh \"your-extension-id\""
+echo ""
+echo "3. Restart Chrome completely (close all windows)"
+echo ""
+echo "4. Verify installation:"
+echo "   - Open extension popup"
+echo "   - Check 'Installation Status' panel - all items should show ✅"
 echo ""
 echo "If you need to uninstall, run: sudo ./uninstall-linux.sh"
+echo ""
+echo "Note: Extension ID parameter is optional. You can link it later using link-extension.sh"
 

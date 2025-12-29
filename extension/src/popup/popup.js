@@ -97,9 +97,83 @@ function updateStatus(status, message, errorDetails = null) {
   }
 }
 
+// Update installation status checklist
+function updateInstallationStatus(status) {
+  // Extension loaded (always true if popup opens)
+  updateStatusItem('statusExtension', true, 'Extension loaded', null);
+  
+  // Native host installed
+  const nativeHostInstalled = status && status.status !== 'disconnected' && status.status !== 'error';
+  updateStatusItem('statusNativeHost', nativeHostInstalled, 'Native host installed', 
+    nativeHostInstalled ? null : { text: 'Install', action: 'install' });
+  
+  // Extension ID linked
+  const idLinked = status && status.status !== 'id_mismatch';
+  updateStatusItem('statusIdLinked', idLinked, 'Extension ID linked',
+    idLinked ? null : { text: 'Link ID', action: 'link' });
+  
+  // Health check passed
+  const healthPassed = status && status.available === true;
+  updateStatusItem('statusHealthCheck', healthPassed, 'Health check passed',
+    healthPassed ? null : { text: 'Retry', action: 'retry' });
+}
+
+function updateStatusItem(itemId, success, label, action) {
+  const item = document.getElementById(itemId);
+  if (!item) return;
+  
+  item.classList.remove('success', 'error', 'checking');
+  const icon = item.querySelector('.status-icon');
+  const actionEl = item.querySelector('.status-action');
+  
+  if (success === null || success === undefined) {
+    // Checking state
+    item.classList.add('checking');
+    icon.textContent = '⏳';
+    actionEl.textContent = '';
+  } else if (success) {
+    // Success state
+    item.classList.add('success');
+    icon.textContent = '✅';
+    actionEl.textContent = '';
+  } else {
+    // Error state
+    item.classList.add('error');
+    icon.textContent = '❌';
+    if (action) {
+      if (action.action === 'install') {
+        actionEl.innerHTML = `<a href="#" class="status-action-button" onclick="window.open('https://github.com/your-repo/releases', '_blank')">${action.text}</a>`;
+      } else if (action.action === 'link') {
+        actionEl.innerHTML = `<span class="status-action-button" style="cursor: pointer;" onclick="copyLinkCommand()">${action.text}</span>`;
+      } else if (action.action === 'retry') {
+        actionEl.innerHTML = `<span class="status-action-button" style="cursor: pointer;" onclick="performHealthCheck()">${action.text}</span>`;
+      }
+    } else {
+      actionEl.textContent = '';
+    }
+  }
+}
+
+// Copy link command to clipboard
+async function copyLinkCommand() {
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'getExtensionId' });
+    if (response && response.extensionId) {
+      const platform = getPlatform();
+      const scriptName = platform === 'windows' ? 'link-extension.ps1' : 'link-extension.sh';
+      const command = `scripts/${scriptName} "${response.extensionId}"`;
+      await navigator.clipboard.writeText(command);
+      alert(`Command copied to clipboard:\n${command}`);
+    }
+  } catch (error) {
+    console.error('Failed to copy link command:', error);
+  }
+}
+
 // Perform health check
 async function performHealthCheck() {
   updateStatus('checking', 'Checking connection...');
+  updateInstallationStatus({ status: 'checking' }); // Show checking state
   
   try {
     // Request health check from background script
@@ -107,18 +181,44 @@ async function performHealthCheck() {
     
     if (response && response.available) {
       updateStatus('connected', 'Native host connected');
+      updateInstallationStatus(response);
+    } else if (response && response.status === 'version_mismatch') {
+      updateStatus('error', 'Version mismatch', {
+        error: response.error,
+        protocolVersion: response.protocolVersion,
+        expectedProtocolVersion: response.expectedProtocolVersion,
+        nativeVersion: response.nativeVersion
+      });
+      updateInstallationStatus(response);
     } else if (response && response.status === 'id_mismatch') {
       updateStatus('id_mismatch', 'Extension ID mismatch', {
         error: response.error,
         extensionId: response.extensionId,
         expectedIds: response.expectedIds
       });
+      updateInstallationStatus(response);
     } else {
-      updateStatus('disconnected', response?.error || 'Native host not available', response);
+      // Get detailed error from storage if available
+      chrome.storage.local.get(['lastError'], (result) => {
+        const errorDetails = result.lastError || { message: response?.error || 'Native host not available' };
+        updateStatus('disconnected', errorDetails.message, { 
+          error: errorDetails.message,
+          details: errorDetails.details 
+        });
+        updateInstallationStatus(response);
+      });
     }
   } catch (error) {
     console.error('Health check failed:', error);
-    updateStatus('disconnected', 'Connection failed', { error: error.message });
+    // Get detailed error from storage if available
+    chrome.storage.local.get(['lastError'], (result) => {
+      const errorDetails = result.lastError || { message: error.message };
+      updateStatus('disconnected', errorDetails.message, { 
+        error: errorDetails.message,
+        details: errorDetails.details 
+      });
+      updateInstallationStatus({ status: 'error', error: errorDetails.message });
+    });
   }
 }
 
@@ -166,10 +266,32 @@ async function loadExtensionId() {
   }
 }
 
+// Load and display dev mode banner
+async function loadDevModeBanner() {
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'getDevMode' });
+    const banner = document.getElementById('devModeBanner');
+    const helpLink = document.getElementById('devModeHelp');
+    
+    if (response && response.isDevMode) {
+      banner.classList.add('show');
+      helpLink.href = 'https://github.com/your-repo/blob/main/docs/DEV_INSTALL.md';
+      helpLink.target = '_blank';
+    } else {
+      banner.classList.remove('show');
+    }
+  } catch (error) {
+    console.error('Failed to load dev mode state:', error);
+  }
+}
+
 // Initialize popup
 async function init() {
   // Load extension ID first
   await loadExtensionId();
+  
+  // Load dev mode banner
+  await loadDevModeBanner();
   
   // Perform health check on open
   await performHealthCheck();
